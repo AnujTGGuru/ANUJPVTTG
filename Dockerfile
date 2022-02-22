@@ -3,6 +3,13 @@ FROM anasty17/mltb:latest
 WORKDIR /usr/src/app
 RUN chmod 777 /usr/src/app
 
+RUN apt-get -qq update && \
+    DEBIAN_FRONTEND="noninteractive" apt-get -qq install -y tzdata aria2 git python3 python3-pip \
+    locales python3-lxml \
+    curl pv jq ffmpeg rclone \
+    wget git zip unzip \
+    p7zip-full p7zip-rar
+
 # install mediainfo
 RUN apt -qq install -y --no-install-recommends mediainfo
 
