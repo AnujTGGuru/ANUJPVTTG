@@ -25,6 +25,10 @@ RUN sh -c 'echo "deb https://mkvtoolnix.download/debian/ buster main" >> /etc/ap
 COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
+COPY extract /usr/local/bin
+COPY pextract /usr/local/bin
+RUN chmod +x /usr/local/bin/extract && chmod +x /usr/local/bin/pextract
 COPY . .
+RUN chmod +x aria.sh
 
 CMD ["bash", "start.sh"]
