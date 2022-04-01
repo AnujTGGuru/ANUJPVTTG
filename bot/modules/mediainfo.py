@@ -28,7 +28,7 @@ def extract_mediainfo(link: str, bot, update):
                "<br><br>" \
                "<pre>{}</pre>"
         page = telegraph.create_page(
-            title="Metadata of Video",
+            title="Mayur Mirror Hub",
             content=html.format(file_name, metadata)
         )
         deleteMessage(bot, msg)
@@ -36,7 +36,7 @@ def extract_mediainfo(link: str, bot, update):
             f"<b>File Name:</b> <code>{file_name}</code>\n"
             f"<b>File Size:</b> <code>{file_size}</code>\n"
             f"<b>Mime Type:</b> <code>{mime_type}</code>\n\n"
-            f"<b>Here all metadata of your video:</b>\n"
+            f"<b>Metadata of your video:</b>\n"
             f"{page['url']}",
             bot, update
         )
