@@ -10,6 +10,7 @@ for original authorship. """
 
 import requests
 import re, os
+import cloudscraper
 
 from lxml import etree
 from base64 import b64decode
@@ -145,6 +146,68 @@ class HubDrive:
         return f"https://drive.google.com/open?id={gd_id}"
 
 
+class SharerPw:
+    client = requests.Session()
+
+    @staticmethod
+    def parse_info(res):
+        f = re.findall(">(.*?)<\/td>", res.text)
+        info_parsed = {}
+        for i in range(0, len(f), 3):
+            info_parsed[f[i].lower().replace(' ', '_')] = f[i+2]
+        return info_parsed
+
+    def sharer_pw_dl(self, url, forced_login=False):
+        scraper = cloudscraper.create_scraper(allow_brotli=False)
+        scraper.cookies.update({
+            "XSRF-TOKEN": os.environ.get("SHARER_XSRF_TOKEN"),
+            "laravel_session": os.environ.get("laravel_session")
+        })
+        res = scraper.get(url)
+        try:
+            token = re.findall("_token\s=\s'(.*?)'", res.text, re.DOTALL)[0]
+        except:
+            raise DirectDownloadLinkException("File Not Found")
+        ddl_btn = etree.HTML(res.content).xpath("//button[@id='btndirect']")
+        info_parsed = self.parse_info(res)
+        info_parsed['error'] = True
+        info_parsed['src_url'] = url
+        info_parsed['link_type'] = 'login' # direct/login
+        info_parsed['forced_login'] = forced_login
+        headers = {
+            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'x-requested-with': 'XMLHttpRequest'
+        }
+        data = {
+            '_token': token
+        }
+        if len(ddl_btn):
+            info_parsed['link_type'] = 'direct'
+        if not forced_login:
+            data['nl'] = 1
+        try: 
+            res = scraper.post(url+'/dl', headers=headers, data=data).json()
+        except:
+            return info_parsed
+        if 'url' in res and res['url']:
+            info_parsed['error'] = False
+            info_parsed['gdrive_link'] = res['url']
+        if len(ddl_btn) and not forced_login and not 'url' in info_parsed:
+            return sharer_pw_dl(url, forced_login=True)
+        return info_parsed
+
+def sirigan(url):
+    client = requests.Session()
+    res = client.get(url)
+    url = res.url.split('=', maxsplit=1)[-1]
+
+    while True:
+        try: url = b64decode(url).decode('utf-8')
+        except: break
+
+    return url.split('url=')[-1]
+
+
 def direct_link_generator(link: str):
     """ direct links generator """
     if 'youtube.com' in link or 'youtu.be' in link:
@@ -193,8 +256,15 @@ def direct_link_generator(link: str):
         return sbembed(link)
     elif "appdrive.in/file" in link:
         return AppDrive().appdrive_dl(link)["gdrive_link"]
-    elif "hubdrive.in/file" in link:
-        return HubDrive().hubdrive_dl(link)
+    elif "hubdrive.cc/file" in link:
+        try: return HubDrive().hubdrive_dl(link)
+        except Exception as err: raise DirectDownloadLinkException(str(err))
+    elif "sharer.pw/file" in link:
+        try: return SharerPw().sharer_pw_dl(link)
+        except Exception as err: raise DirectDownloadLinkException(str(err))
+    elif "sirigan.my.id" in link:
+        try: return sirigan(link)
+        except Exception as err: raise DirectDownloadLinkException(str(err))
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
