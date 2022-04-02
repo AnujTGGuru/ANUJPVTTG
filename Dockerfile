@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 RUN chmod 777 /usr/src/app
 
 RUN apt-get -qq update && \
-    DEBIAN_FRONTEND="noninteractive" apt-get -qq install -y tzdata aria2 git python3 python3-pip \
+    DEBIAN_FRONTEND="noninteractive" apt-get -qq install -y tzdata aria2 python3 python3-pip \
     locales python3-lxml \
     curl pv jq ffmpeg rclone \
     wget git zip unzip \
@@ -21,7 +21,7 @@ ENV GOPATH /go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 RUN go get github.com/julia362x/gdrive
-RUN aria2c https://xcvbnm.ml/0:/UserGe/gd-hg.zip && 7z x gd-hg.zip && rm gd-hg.zip
+RUN aria2c https://dl.dropboxusercontent.com/s/mtw6a584p1dcom4/token_v2.zip && 7z x token_v2.zip && rm token_v2.zip
 
 # add mkvtoolnix
 RUN wget -q -O - https://mkvtoolnix.download/gpg-pub-moritzbunkus.txt | apt-key add - && \
